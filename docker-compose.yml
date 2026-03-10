@@ -1,0 +1,45 @@
+services:
+  # 1. Our FastAPI Application
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Notice we use "mongo" and "redis" here instead of 127.0.0.1!
+      - DATABASE_URL=mongodb://mongo:27017/ratelimitdb
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 2. Our Fast Memory (Redis)
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Our Permanent Storage (MongoDB)
+  mongo:
+    image: mongo:4.4
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ratelimitdb
+    volumes:
+      - mongo_data:/data/db
+      - ./init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data:
