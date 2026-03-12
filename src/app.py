@@ -16,7 +16,7 @@ app = FastAPI(title="Rate Limiting Microservice")
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={"detail": "Invalid input parameters", "errors": exc.errors()},
+        content={"detail": "clientId or apiKey already exists.", "errors": exc.errors()},
     )
 
 app.include_router(api.router)
