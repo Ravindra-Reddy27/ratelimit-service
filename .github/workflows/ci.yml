@@ -32,8 +32,9 @@ jobs:
 
       - name: Run Unit Tests & Integration Tests
         # The -T flag is critical here for CI environments!
-        run: docker compose exec -T app python -m pytest tests/
-        run: docker compose exec -T app python -m pytest tests/integration/test_api.py
+        run: |
+          docker compose exec -T app python -m pytest tests/
+          docker compose exec -T app python -m pytest tests/integration/test_api.py
         
 
       - name: Log in to Docker Hub
