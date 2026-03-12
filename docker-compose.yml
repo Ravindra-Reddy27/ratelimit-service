@@ -5,14 +5,21 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Notice we use "mongo" and "redis" here instead of 127.0.0.1!
-      - DATABASE_URL=mongodb://mongo:27017/ratelimitdb
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - DEFAULT_RATE_LIMIT_MAX_REQUESTS=${DEFAULT_RATE_LIMIT_MAX_REQUESTS}
+      - DEFAULT_RATE_LIMIT_WINDOW_SECONDS=${DEFAULT_RATE_LIMIT_WINDOW_SECONDS}
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # --- FIX 3: App Healthcheck ---
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # 2. Our Fast Memory (Redis)
   redis:

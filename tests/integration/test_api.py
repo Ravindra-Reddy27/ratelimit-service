@@ -1,9 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.app import app
+import uuid
 
-# This fixture keeps the application and event loop open 
-# for the entire test session (scope="module").
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
@@ -22,16 +21,19 @@ def test_register_client(client):
         "maxRequests": 3,
         "windowSeconds": 60
     })
-    # We expect 201 (Created) or 409 (Conflict if it already ran once)
     assert response.status_code in [201, 409]
 
 def test_rate_limit_enforcement(client):
     """Verify the Token Bucket actually blocks traffic"""
-    # 1. Hit the API 3 times (Our limit is 3)
+    
+    # Create a completely unique path so Redis always sees an empty bucket
+    unique_path = f"/api/test/{uuid.uuid4()}"
+    
+    # 1. Hit the API 3 times
     for _ in range(3):
         res = client.post("/api/v1/ratelimit/check", json={
             "clientId": "automated-test-app",
-            "path": "/api/test"
+            "path": unique_path
         })
         assert res.status_code == 200
         assert res.json()["allowed"] == True
@@ -39,7 +41,7 @@ def test_rate_limit_enforcement(client):
     # 2. Hit it a 4th time and verify it gets blocked!
     blocked_res = client.post("/api/v1/ratelimit/check", json={
         "clientId": "automated-test-app",
-        "path": "/api/test"
+        "path": unique_path
     })
     assert blocked_res.status_code == 429
     assert blocked_res.json()["allowed"] == False

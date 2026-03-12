@@ -12,6 +12,12 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      DEFAULT_RATE_LIMIT_MAX_REQUESTS: ${{ secrets.DEFAULT_RATE_LIMIT_MAX_REQUESTS }}
+      DEFAULT_RATE_LIMIT_WINDOW_SECONDS: ${{ secrets.DEFAULT_RATE_LIMIT_WINDOW_SECONDS }}
+
 
     steps:
       - name: Checkout code
@@ -24,9 +30,11 @@ jobs:
         # A simple pause to give Mongo and Redis time to boot up completely
         run: sleep 15 
 
-      - name: Run Integration Tests
+      - name: Run Unit Tests & Integration Tests
         # The -T flag is critical here for CI environments!
+        run: docker compose exec -T app python -m pytest tests/
         run: docker compose exec -T app python -m pytest tests/integration/test_api.py
+        
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
