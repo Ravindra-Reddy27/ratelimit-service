@@ -234,7 +234,7 @@ git push origin main
 
 - Build the Docker image
 - Run unit and integration tests
-- Push the Docker image to Docker Hub
+- Push the Docker image to Docker Hub.
 
 ##  Screenshots
 
